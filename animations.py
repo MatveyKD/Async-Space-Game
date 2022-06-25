@@ -109,7 +109,7 @@ def draw(canvas):
     for num in range(stars):
         row, column = (random.randint(1, width-1), random.randint(1, height-1))
         coroutines.append(blink(canvas, row, column, random.choice(symbols)))
-    coroutines.append(draw_spaceship(canvas, width//2, height//2))
+    coroutines.append(animate_spaceship(canvas, width//2, height//2))
 
     while True:
         for coroutine in coroutines.copy():
@@ -123,7 +123,7 @@ def draw(canvas):
         canvas.refresh()
 
 
-async def draw_spaceship(canvas, row, column, speed=1):
+async def animate_spaceship(canvas, row, column, speed=1):
     frames = []
     for frame in range(1, 3):
         with open(f"frames/spaceship_frame_{frame}.txt", "r") as file:
@@ -148,5 +148,3 @@ async def draw_spaceship(canvas, row, column, speed=1):
             column = 0
         elif column + columns > window_size[1]:
             column = window_size[1] - columns
-
-
