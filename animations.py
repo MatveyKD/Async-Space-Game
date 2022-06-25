@@ -72,6 +72,13 @@ def draw_frame(canvas, start_row, start_column, text, negative=False):
             symbol = symbol if not negative else ' '
             canvas.addch(row, column, symbol)
 
+def load_frames():
+    frames = []
+    for dirpath, dirnames, frame in os.walk("frames"):
+        with open(f"frames/spaceship_frame_{frame}.txt", "r") as file:
+            frames.append(file.read())
+    return frames
+
 def get_frame_size(text):
     """Calculate size of multiline text fragment, return pair — number of rows and colums."""
 
@@ -105,11 +112,12 @@ def draw(canvas):
     symbols = "+*.:'"
     coroutines = []
     width, height = canvas.getmaxyx()
+    frames = load_frames()
     stars = 100
     for num in range(stars):
         row, column = (random.randint(1, width-1), random.randint(1, height-1))
         coroutines.append(blink(canvas, row, column, random.choice(symbols)))
-    coroutines.append(animate_spaceship(canvas, width//2, height//2))
+    coroutines.append(animate_spaceship(canvas, width//2, height//2, framess))
 
     while True:
         for coroutine in coroutines.copy():
@@ -123,12 +131,7 @@ def draw(canvas):
         canvas.refresh()
 
 
-async def animate_spaceship(canvas, row, column, speed=1):
-    frames = []
-    for frame in range(1, 3):
-        with open(f"frames/spaceship_frame_{frame}.txt", "r") as file:
-            frames.append(file.read())
-
+async def animate_spaceship(canvas, row, column, frames, speed=1):
     for frame in itertools.cycle(frames):
         draw_frame(canvas, row, column, frame)
         row_direction, column_direction = read_controls(canvas)
