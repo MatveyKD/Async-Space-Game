@@ -104,12 +104,12 @@ def draw(canvas):
     canvas.nodelay(True)
     symbols = "+*.:'"
     coroutines = []
-    window_size = canvas.getmaxyx()
+    width, height = canvas.getmaxyx()
     stars = 100
     for num in range(stars):
-        row, column = (random.randint(1, window_size[0]-1), random.randint(1, window_size[1]-1))
+        row, column = (random.randint(1, width-1), random.randint(1, height-1))
         coroutines.append(blink(canvas, row, column, random.choice(symbols)))
-    coroutines.append(draw_spaceship(canvas, window_size[0]//2, window_size[1]//2))
+    coroutines.append(draw_spaceship(canvas, width//2, height//2))
 
     while True:
         for coroutine in coroutines.copy():
