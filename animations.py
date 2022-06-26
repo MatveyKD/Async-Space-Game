@@ -2,6 +2,7 @@ import random
 import curses
 import time
 import itertools
+import os
 import asyncio
 
 
@@ -75,8 +76,9 @@ def draw_frame(canvas, start_row, start_column, text, negative=False):
 def load_frames():
     frames = []
     for dirpath, dirnames, frame in os.walk("frames"):
-        with open(f"frames/spaceship_frame_{frame}.txt", "r") as file:
-            frames.append(file.read())
+        for frame_path in frame:
+            with open(f"frames/{frame_path}", "r") as file:
+                frames.append(file.read())
     return frames
 
 def get_frame_size(text):
@@ -117,7 +119,7 @@ def draw(canvas):
     for num in range(stars):
         row, column = (random.randint(1, width-1), random.randint(1, height-1))
         coroutines.append(blink(canvas, row, column, random.choice(symbols)))
-    coroutines.append(animate_spaceship(canvas, width//2, height//2, framess))
+    coroutines.append(animate_spaceship(canvas, width//2, height//2, frames))
 
     while True:
         for coroutine in coroutines.copy():
