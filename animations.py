@@ -64,14 +64,12 @@ def draw_frame(canvas, start_row, start_column, text, negative=False):
             if symbol == ' ':
                 continue
 
-            # Check that current position it is not in a lower right corner of the window
-            # Curses will raise exception in that case. Don`t ask why…
-            # https://docs.python.org/3/library/curses.html#curses.window.addch
             if row == rows_number - 1 and column == columns_number - 1:
                 continue
 
             symbol = symbol if not negative else ' '
             canvas.addch(row, column, symbol)
+
 
 def load_frames():
     frames = []
@@ -81,9 +79,8 @@ def load_frames():
                 frames.append(file.read())
     return frames
 
-def get_frame_size(text):
-    """Calculate size of multiline text fragment, return pair — number of rows and colums."""
 
+def get_frame_size(text):
     lines = text.splitlines()
     rows = len(lines)
     columns = max([len(line) for line in lines])
@@ -108,6 +105,7 @@ async def blink(canvas, row, column, symbol='*'):
         for _ in range(random.randint(5, 20)):
             await asyncio.sleep(0)
 
+
 def draw(canvas):
     curses.curs_set(False)
     canvas.nodelay(True)
@@ -127,8 +125,6 @@ def draw(canvas):
                 coroutine.send(None)
             except StopIteration:
                 coroutines.remove(coroutine)
-            if not len(coroutines):
-                break
         time.sleep(0.1)
         canvas.refresh()
 
@@ -140,7 +136,6 @@ async def animate_spaceship(canvas, row, column, frames, speed=1):
         await asyncio.sleep(0)
         await asyncio.sleep(0)
         draw_frame(canvas, row, column, frame, negative=True)
-
 
         row += row_direction * speed
         column += column_direction * speed
