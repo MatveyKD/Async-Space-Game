@@ -93,19 +93,19 @@ def get_frame_size(text):
 async def blink(canvas, row, column, symbol='*'):
     while True:
         canvas.addstr(row, column, symbol, curses.A_DIM)
-        for i in range(random.randint(5, 20)):
+        for _ in range(random.randint(5, 20)):
             await asyncio.sleep(0)
 
         canvas.addstr(row, column, symbol)
-        for i in range(random.randint(5, 20)):
+        for _ in range(random.randint(5, 20)):
             await asyncio.sleep(0)
 
         canvas.addstr(row, column, symbol, curses.A_BOLD)
-        for i in range(random.randint(5, 20)):
+        for _ in range(random.randint(5, 20)):
             await asyncio.sleep(0)
 
         canvas.addstr(row, column, symbol)
-        for i in range(random.randint(5, 20)):
+        for _ in range(random.randint(5, 20)):
             await asyncio.sleep(0)
 
 def draw(canvas):
