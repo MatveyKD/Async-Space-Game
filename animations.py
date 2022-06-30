@@ -76,7 +76,10 @@ def load_frames():
     for dirpath, dirnames, frame in os.walk("frames"):
         for frame_path in frame:
             with open(f"frames/{frame_path}", "r") as file:
-                frames.append(file.read())
+                frame_content = file.read()
+                for _ in range(2):
+                    frames.append(frame_content)
+    print(frames)
     return frames
 
 
@@ -133,7 +136,6 @@ async def animate_spaceship(canvas, row, column, frames, speed=1):
     for frame in itertools.cycle(frames):
         draw_frame(canvas, row, column, frame)
         row_direction, column_direction = read_controls(canvas)
-        await asyncio.sleep(0)
         await asyncio.sleep(0)
         draw_frame(canvas, row, column, frame, negative=True)
 
