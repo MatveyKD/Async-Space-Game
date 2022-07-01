@@ -73,13 +73,11 @@ def draw_frame(canvas, start_row, start_column, text, negative=False):
 
 def load_frames():
     frames = []
-    for dirpath, dirnames, frame in os.walk("frames"):
-        for frame_path in frame:
-            with open(f"frames/{frame_path}", "r") as file:
-                frame_content = file.read()
-                for _ in range(2):
-                    frames.append(frame_content)
-    print(frames)
+    for frame_path in os.listdir("frames"):
+        with open(f"frames/{frame_path}", "r") as file:
+            frame = file.read()
+            for _ in range(2):
+                frames.append(frame)
     return frames
 
 
@@ -143,11 +141,8 @@ async def animate_spaceship(canvas, row, column, frames, speed=1):
         column += column_direction * speed
         rows, columns = get_frame_size(frame)
         window_size = canvas.getmaxyx()
-        if row < 0:
-            row = 0
-        elif row + rows > window_size[0]:
-            row = window_size[0] - rows
-        if column < 0:
-            column = 0
-        elif column + columns > window_size[1]:
-            column = window_size[1] - columns
+
+        row = max(0, row)
+        row = min(row + rows, window_size[0]) - rows
+        column = max(0, column)
+        column = min(column + columns, window_size[1]) - columns
