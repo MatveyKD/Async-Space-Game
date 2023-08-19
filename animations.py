@@ -12,6 +12,8 @@ RIGHT_KEY_CODE = 261
 UP_KEY_CODE = 259
 DOWN_KEY_CODE = 258
 
+COROUTINES = []
+
 
 def read_controls(canvas):
     """Read keys pressed and returns tuple witl controls state."""
@@ -72,7 +74,6 @@ def draw_frame(canvas, start_row, start_column, text, negative=False):
 
 
 async def fly_garbage(canvas, column, garbage_frame, speed=0.5):
-    """Animate garbage, flying from top to bottom. Сolumn position will stay same, as specified on start."""
     rows_number, columns_number = canvas.getmaxyx()
 
     column = max(column, 0)
@@ -123,29 +124,38 @@ async def blink(canvas, row, column, symbol='*'):
             await asyncio.sleep(0)
 
 
+async def fill_orbit_with_garbage(canvas, height, frames):
+    while True:
+        column = random.randint(1, height - 1)
+        frame = random.choice(frames)
+        COROUTINES.append(fly_garbage(canvas, column, frame))
+        for _ in range(random.randint(3, 20)):
+            await asyncio.sleep(0)
+
+
 def draw(canvas):
     curses.curs_set(False)
     canvas.nodelay(True)
     symbols = "+*.:'"
-    coroutines = []
     width, height = canvas.getmaxyx()
     spaceship_frames = load_frames("spaceship")
     garbage_frames = load_frames("garbage")
     stars = 100
     for num in range(stars):
         row, column = random.randint(1, width-1), random.randint(1, height-1)
-        coroutines.append(blink(canvas, row, column, random.choice(symbols)))
-    coroutines.append(animate_spaceship(canvas, width//2, height//2, spaceship_frames))
-    coroutines.append(fly_garbage(canvas, column=height//2, garbage_frame=random.choice(garbage_frames)))
+        COROUTINES.append(blink(canvas, row, column, random.choice(symbols)))
+    COROUTINES.append(animate_spaceship(canvas, width//2, height//2, spaceship_frames))
+    COROUTINES.append(fill_orbit_with_garbage(canvas, height, garbage_frames))
 
     while True:
-        for coroutine in coroutines.copy():
+        for coroutine in COROUTINES.copy():
             try:
                 coroutine.send(None)
             except StopIteration:
-                coroutines.remove(coroutine)
+                COROUTINES.remove(coroutine)
         time.sleep(0.1)
         canvas.refresh()
+        canvas.border()
 
 
 async def animate_spaceship(canvas, row, column, frames, speed=1):
