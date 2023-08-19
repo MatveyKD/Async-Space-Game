@@ -71,10 +71,26 @@ def draw_frame(canvas, start_row, start_column, text, negative=False):
             canvas.addch(row, column, symbol)
 
 
-def load_frames():
+async def fly_garbage(canvas, column, garbage_frame, speed=0.5):
+    """Animate garbage, flying from top to bottom. Сolumn position will stay same, as specified on start."""
+    rows_number, columns_number = canvas.getmaxyx()
+
+    column = max(column, 0)
+    column = min(column, columns_number - 1)
+
+    row = 0
+
+    while row < rows_number:
+        draw_frame(canvas, row, column, garbage_frame)
+        await asyncio.sleep(0)
+        draw_frame(canvas, row, column, garbage_frame, negative=True)
+        row += speed
+
+
+def load_frames(dir_name):
     frames = []
-    for frame_path in os.listdir("frames"):
-        with open(f"frames/{frame_path}", "r") as file:
+    for frame_path in os.listdir(f"frames/{dir_name}"):
+        with open(f"frames/{dir_name}/{frame_path}", "r") as file:
             frame = file.read()
             for _ in range(2):
                 frames.append(frame)
@@ -113,12 +129,14 @@ def draw(canvas):
     symbols = "+*.:'"
     coroutines = []
     width, height = canvas.getmaxyx()
-    frames = load_frames()
+    spaceship_frames = load_frames("spaceship")
+    garbage_frames = load_frames("garbage")
     stars = 100
     for num in range(stars):
-        row, column = (random.randint(1, width-1), random.randint(1, height-1))
+        row, column = random.randint(1, width-1), random.randint(1, height-1)
         coroutines.append(blink(canvas, row, column, random.choice(symbols)))
-    coroutines.append(animate_spaceship(canvas, width//2, height//2, frames))
+    coroutines.append(animate_spaceship(canvas, width//2, height//2, spaceship_frames))
+    coroutines.append(fly_garbage(canvas, column=height//2, garbage_frame=random.choice(garbage_frames)))
 
     while True:
         for coroutine in coroutines.copy():
