@@ -108,20 +108,16 @@ def get_frame_size(text):
 async def blink(canvas, row, column, symbol='*'):
     while True:
         canvas.addstr(row, column, symbol, curses.A_DIM)
-        for _ in range(random.randint(5, 20)):
-            await asyncio.sleep(0)
+        await sleep(random.randint(5, 20))
 
         canvas.addstr(row, column, symbol)
-        for _ in range(random.randint(5, 20)):
-            await asyncio.sleep(0)
+        await sleep(random.randint(5, 20))
 
         canvas.addstr(row, column, symbol, curses.A_BOLD)
-        for _ in range(random.randint(5, 20)):
-            await asyncio.sleep(0)
+        await sleep(random.randint(5, 20))
 
         canvas.addstr(row, column, symbol)
-        for _ in range(random.randint(5, 20)):
-            await asyncio.sleep(0)
+        await sleep(random.randint(5, 20))
 
 
 async def fill_orbit_with_garbage(canvas, height, frames):
@@ -129,8 +125,7 @@ async def fill_orbit_with_garbage(canvas, height, frames):
         column = random.randint(1, height - 1)
         frame = random.choice(frames)
         COROUTINES.append(fly_garbage(canvas, column, frame))
-        for _ in range(random.randint(3, 20)):
-            await asyncio.sleep(0)
+        await sleep(random.randint(3, 20))
 
 
 def draw(canvas):
@@ -174,3 +169,8 @@ async def animate_spaceship(canvas, row, column, frames, speed=1):
         row = min(row + rows, window_size[0]) - rows
         column = max(0, column)
         column = min(column + columns, window_size[1]) - columns
+
+
+async def sleep(tics=1):
+    for _ in range(tics):
+        await asyncio.sleep(0)
