@@ -6,8 +6,9 @@ import os
 import asyncio
 
 from physics import update_speed
-from tools import draw_frame
+from tools import draw_frame, get_frame_size
 from obstacles import Obstacle, show_obstacles
+from explosion import explode
 
 
 SPACE_KEY_CODE = 32
@@ -73,6 +74,7 @@ async def fly_garbage(canvas, column, garbage_frame, speed=0.5):
         obstacle.row = row
         if obstacle in obstacles_in_last_collisions:
             obstacles_in_last_collisions.remove(obstacle)
+            await explode(canvas, row+(rows/2), column+(columns/2))
             break
     OBSTACLES.remove(obstacle)
 
@@ -85,13 +87,6 @@ def load_frames(dir_name):
             for _ in range(2):
                 frames.append(frame)
     return frames
-
-
-def get_frame_size(text):
-    lines = text.splitlines()
-    rows = len(lines)
-    columns = max([len(line) for line in lines])
-    return rows, columns
 
 
 async def blink(canvas, row, column, symbol='*'):
