@@ -21,6 +21,17 @@ COROUTINES = []
 OBSTACLES = []
 obstacles_in_last_collisions = []
 
+GAMEOVER_TEXT = """
+   _____                         ____                 
+  / ____|                       / __ \                
+ | |  __  __ _ _ __ ___   ___  | |  | |_   _____ _ __ 
+ | | |_ |/ _` | '_ ` _ \ / _ \ | |  | \ \ / / _ \ '__|
+ | |__| | (_| | | | | | |  __/ | |__| |\ V /  __/ |   
+  \_____|\__,_|_| |_| |_|\___|  \____/  \_/ \___|_|   
+                                                      
+                                                      
+"""
+
 
 def read_controls(canvas):
     """Read keys pressed and returns tuple witl controls state."""
@@ -74,8 +85,9 @@ async def fly_garbage(canvas, column, garbage_frame, speed=0.5):
         obstacle.row = row
         if obstacle in obstacles_in_last_collisions:
             obstacles_in_last_collisions.remove(obstacle)
+            OBSTACLES.remove(obstacle)
             await explode(canvas, row+(rows/2), column+(columns/2))
-            break
+            return
     OBSTACLES.remove(obstacle)
 
 
@@ -102,6 +114,13 @@ async def blink(canvas, row, column, symbol='*'):
 
         canvas.addstr(row, column, symbol)
         await sleep(random.randint(5, 20))
+
+
+async def show_gameover(canvas):
+    rows, columns = canvas.getmaxyx()
+    while True:
+        draw_frame(canvas, rows/2, columns/2, GAMEOVER_TEXT)
+        await sleep()
 
 
 async def fill_orbit_with_garbage(canvas, height, frames):
@@ -199,6 +218,12 @@ async def animate_spaceship(canvas, row, column, frames):
                 coroutine.send(None)
             except StopIteration:
                 fires.remove(coroutine)
+
+        for obstacle in OBSTACLES:
+            if obstacle.has_collision(row, column):
+                obstacles_in_last_collisions.append(obstacle)
+                await show_gameover(canvas)
+                return
 
 
 async def sleep(tics=1):
