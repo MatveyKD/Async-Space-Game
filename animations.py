@@ -71,6 +71,7 @@ async def fly_garbage(canvas, column, garbage_frame, speed=0.5):
         row += speed
 
         obstacle.row = row
+    OBSTACLES.remove(obstacle)
 
 
 def load_frames(dir_name):
