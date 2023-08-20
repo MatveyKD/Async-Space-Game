@@ -5,6 +5,10 @@ import itertools
 import os
 import asyncio
 
+from physics import update_speed
+from tools import draw_frame
+from obstacles import Obstacle, show_obstacles
+
 
 SPACE_KEY_CODE = 32
 LEFT_KEY_CODE = 260
@@ -13,6 +17,7 @@ UP_KEY_CODE = 259
 DOWN_KEY_CODE = 258
 
 COROUTINES = []
+OBSTACLES = []
 
 
 def read_controls(canvas):
@@ -43,34 +48,7 @@ def read_controls(canvas):
         if pressed_key_code == SPACE_KEY_CODE:
             space_pressed = True
 
-    return rows_direction, columns_direction
-
-
-def draw_frame(canvas, start_row, start_column, text, negative=False):
-    rows_number, columns_number = canvas.getmaxyx()
-
-    for row, line in enumerate(text.splitlines(), round(start_row)):
-        if row < 0:
-            continue
-
-        if row >= rows_number:
-            break
-
-        for column, symbol in enumerate(line, round(start_column)):
-            if column < 0:
-                continue
-
-            if column >= columns_number:
-                break
-
-            if symbol == ' ':
-                continue
-
-            if row == rows_number - 1 and column == columns_number - 1:
-                continue
-
-            symbol = symbol if not negative else ' '
-            canvas.addch(row, column, symbol)
+    return rows_direction, columns_direction, space_pressed
 
 
 async def fly_garbage(canvas, column, garbage_frame, speed=0.5):
@@ -81,11 +59,18 @@ async def fly_garbage(canvas, column, garbage_frame, speed=0.5):
 
     row = 0
 
+    rows, columns = get_frame_size(garbage_frame)
+
+    obstacle = Obstacle(row, column, rows, columns)
+    OBSTACLES.append(obstacle)
+
     while row < rows_number:
         draw_frame(canvas, row, column, garbage_frame)
         await asyncio.sleep(0)
         draw_frame(canvas, row, column, garbage_frame, negative=True)
         row += speed
+
+        obstacle.row = row
 
 
 def load_frames(dir_name):
@@ -141,6 +126,7 @@ def draw(canvas):
         COROUTINES.append(blink(canvas, row, column, random.choice(symbols)))
     COROUTINES.append(animate_spaceship(canvas, width//2, height//2, spaceship_frames))
     COROUTINES.append(fill_orbit_with_garbage(canvas, height, garbage_frames))
+    COROUTINES.append(show_obstacles(canvas, OBSTACLES))
 
     while True:
         for coroutine in COROUTINES.copy():
@@ -153,15 +139,47 @@ def draw(canvas):
         canvas.border()
 
 
-async def animate_spaceship(canvas, row, column, frames, speed=1):
+async def fire(canvas, start_row, start_column, rows_speed=-0.3, columns_speed=0):
+    """Display animation of gun shot, direction and speed can be specified."""
+
+    row, column = start_row, start_column
+
+    canvas.addstr(round(row), round(column), '*')
+    await asyncio.sleep(0)
+
+    canvas.addstr(round(row), round(column), 'O')
+    await asyncio.sleep(0)
+    canvas.addstr(round(row), round(column), ' ')
+
+    row += rows_speed
+    column += columns_speed
+
+    symbol = '-' if columns_speed else '|'
+
+    rows, columns = canvas.getmaxyx()
+    max_row, max_column = rows - 1, columns - 1
+
+    curses.beep()
+
+    while 0 < row < max_row and 0 < column < max_column:
+        canvas.addstr(round(row), round(column), symbol)
+        await asyncio.sleep(0)
+        canvas.addstr(round(row), round(column), ' ')
+        row += rows_speed
+        column += columns_speed
+
+
+async def animate_spaceship(canvas, row, column, frames):
+    row_speed = column_speed = 0
+    fires = []
     for frame in itertools.cycle(frames):
         draw_frame(canvas, row, column, frame)
-        row_direction, column_direction = read_controls(canvas)
-        await asyncio.sleep(0)
+        row_direction, column_direction, space_pressed = read_controls(canvas)
+        await sleep()
         draw_frame(canvas, row, column, frame, negative=True)
 
-        row += row_direction * speed
-        column += column_direction * speed
+        row_speed, column_speed = update_speed(row_speed, column_speed, row_direction, column_direction)
+        row, column = row + row_speed, column + column_speed
         rows, columns = get_frame_size(frame)
         window_size = canvas.getmaxyx()
 
@@ -169,6 +187,14 @@ async def animate_spaceship(canvas, row, column, frames, speed=1):
         row = min(row + rows, window_size[0]) - rows
         column = max(0, column)
         column = min(column + columns, window_size[1]) - columns
+
+        if space_pressed:
+            fires.append(fire(canvas, row, column))
+        for coroutine in fires:
+            try:
+                coroutine.send(None)
+            except StopIteration:
+                fires.remove(coroutine)
 
 
 async def sleep(tics=1):
