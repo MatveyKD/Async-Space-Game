@@ -126,7 +126,6 @@ def get_garbage_delay_tics(year):
 def update_cur_phrase():
     global cur_phrase
     phrase = PHRASES.get(int(year))
-    print(phrase)
     cur_phrase = phrase if phrase else cur_phrase
 
 
@@ -140,19 +139,20 @@ def load_frames(dir_name):
     return frames
 
 
-async def blink(canvas, row, column, symbol='*'):
+async def blink(canvas, row, column, offset_tics, symbol='*'):
+    await sleep(offset_tics)
     while True:
         canvas.addstr(row, column, symbol, curses.A_DIM)
-        await sleep(random.randint(5, 20))
+        await sleep(20)
 
         canvas.addstr(row, column, symbol)
-        await sleep(random.randint(5, 20))
+        await sleep(3)
 
         canvas.addstr(row, column, symbol, curses.A_BOLD)
-        await sleep(random.randint(5, 20))
+        await sleep(5)
 
         canvas.addstr(row, column, symbol)
-        await sleep(random.randint(5, 20))
+        await sleep(3)
 
 
 async def show_gameover(canvas):
@@ -187,7 +187,7 @@ def draw(canvas):
     stars = 100
     for num in range(stars):
         row, column = random.randint(1, width-1), random.randint(1, height-1)
-        coroutines.append(blink(canvas, row, column, random.choice(symbols)))
+        coroutines.append(blink(canvas, row, column, random.randint(1, 20), random.choice(symbols)))
     coroutines.append(animate_spaceship(canvas, width//2, height//2, spaceship_frames))
     coroutines.append(fill_orbit_with_garbage(canvas, height, garbage_frames))
 
